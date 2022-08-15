@@ -23,6 +23,7 @@ extern crate toml;
 use ed25519_dalek::*;
 
 use hex::FromHex;
+use curve25519_dalek::digest::Update;
 
 use sha2::Sha512;
 
@@ -103,9 +104,8 @@ mod vectors {
 
         let mut prehash_for_signing: Sha512 = Sha512::default();
         let mut prehash_for_verifying: Sha512 = Sha512::default();
-
-        prehash_for_signing.update(&msg_bytes[..]);
-        prehash_for_verifying.update(&msg_bytes[..]);
+        ed25519_dalek::Digest::update(&mut prehash_for_signing, &msg_bytes[..]);
+        ed25519_dalek::Digest::update(&mut prehash_for_verifying, &msg_bytes[..]);
 
         let sig2: Signature = keypair.sign_prehashed(prehash_for_signing, None).unwrap();
 
@@ -229,16 +229,17 @@ mod integrations {
 
         // ugh… there's no `impl Copy for Sha512`… i hope we can all agree these are the same hashes
         let mut prehashed_good1: Sha512 = Sha512::default();
-        prehashed_good1.update(good);
+        ed25519_dalek::Digest::update(&mut prehashed_good1, good);
         let mut prehashed_good2: Sha512 = Sha512::default();
-        prehashed_good2.update(good);
+        ed25519_dalek::Digest::update(&mut prehashed_good2, good);
         let mut prehashed_good3: Sha512 = Sha512::default();
-        prehashed_good3.update(good);
+        ed25519_dalek::Digest::update(&mut prehashed_good3, good);
 
         let mut prehashed_bad1: Sha512 = Sha512::default();
-        prehashed_bad1.update(bad);
+        ed25519_dalek::Digest::update(&mut prehashed_bad1, bad);
+
         let mut prehashed_bad2: Sha512 = Sha512::default();
-        prehashed_bad2.update(bad);
+        ed25519_dalek::Digest::update(&mut prehashed_bad2, bad);
 
         let context: &[u8] = b"testing testing 1 2 3";
 
